@@ -1,37 +1,13 @@
 Start Program
 
     Set x to 100 int
-    
-    Define Function foo(x int) {
-        //Set x to 1 int
+
+    Define Function foo (x,x){
+        
         Display x, parent::x
     }
     End Function
 
-    foo(7)
-
-
-
-
-    Set x to 1 int
-    Set y to 100 int
-    {
-        Set x to 2 int
-        {
-            Set x to 3 int
-
-            Display x
-            Display parent::x
-            Display parent::parent::x
-
-            Display y
-            Display parent::y
-            Display parent::parent::y
-
-            // parent::parent::parent::x → Error if uncommented
-            // parent::parent::parent::y → Error if uncommented
-        }
-    }
-
+    foo (5, 7)
 
 End Program

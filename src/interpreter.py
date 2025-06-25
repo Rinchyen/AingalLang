@@ -204,7 +204,7 @@ class Interpreter(AingalLangParserVisitor):
         self.functions[name] = {
             "params": param_list,
             "body": body,
-            "scope": self.current_scope
+            "scope": self.current_scope  # Store the current scope as parent
         }
 
         return None
@@ -242,12 +242,18 @@ class Interpreter(AingalLangParserVisitor):
 
         previous_scope = self.current_scope
         self.current_scope = local_scope
+        self.call_stack.append({
+            'name': name,
+            'params': param_names,
+            'scope': local_scope
+        })
 
         try:
             result = self.visit(body)
         except FunctionReturn as fr:
             result = fr.value
         finally:
+            self.call_stack.pop()
             self.current_scope = previous_scope
 
         return result
@@ -291,9 +297,31 @@ class Interpreter(AingalLangParserVisitor):
     def visitScopedIdentifier(self, ctx):
         levels = len(ctx.getTokens(AingalLangParser.PARENT_SCOPE))
         name = ctx.IDENTIFIER().getText()
-
-        current_scope = self.current_scope.parent if self.current_scope.parent else self.current_scope
         
+        current_scope = self.current_scope
+        
+        # For function scopes, we need to start from the parent scope
+        # For regular blocks, we start from current scope
+        # So we need to check if we're in a function call context
+        in_function = any(isinstance(frame, dict) and 'params' in frame 
+                        for frame in self.call_stack)
+        
+        # If we're in a function and asking for parent, we need to go up one more level
+        if in_function and levels > 0:
+            if current_scope.parent is None:
+                line = ctx.start.line
+                column = ctx.start.column
+                code_line = self.get_source_line(ctx)
+                raise InterpreterError(
+                    message=f"No parent scope exists while resolving 'parent::{name}'",
+                    line=line,
+                    column=column,
+                    code_line=code_line,
+                    suggestion="Try using fewer 'parent::' levels - you exceeded the available scope depth"
+                )
+            current_scope = current_scope.parent
+        
+        # Now handle all requested parent levels
         for _ in range(levels):
             if current_scope.parent is None:
                 line = ctx.start.line
@@ -307,15 +335,18 @@ class Interpreter(AingalLangParserVisitor):
                     suggestion="Try using fewer 'parent::' levels - you exceeded the available scope depth"
                 )
             current_scope = current_scope.parent
-
+        
         return current_scope.get_variable(name)
-
     
     def visitBlockStatement(self, ctx):
         self.push_env()
         for stmt in ctx.statement():
-            self.visit(stmt)
+            result = self.visit(stmt)
+            if isinstance(result, BreakStatement):
+                self.pop_env()
+                return result
         self.pop_env()
+        return None
 
     
     def visitReturnStatement(self, ctx):
