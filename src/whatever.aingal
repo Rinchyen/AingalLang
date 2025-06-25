@@ -1,13 +1,27 @@
 Start Program
 
-    Set x to 100 int
-
-    Define Function foo (x,x){
-        
-        Display x, parent::x
+    Define Function foo1(a int) {
+        Display "foo1:", a
+        If (a > 0) {
+            foo2(a - 1)
+        }
+        Return 0
     }
     End Function
 
-    foo (5, 7)
+    Define Function foo2(a int) {
+        Display "foo2:", a
+        If (a > 0) {
+            foo1(a - 2)
+        }
+        Return 1
+    }
+    End Function
+
+    Define Function foo1(a int) {
+        Return 10 
+    } End Function
+
+    foo1(10)
 
 End Program

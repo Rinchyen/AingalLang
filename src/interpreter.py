@@ -194,17 +194,33 @@ class Interpreter(AingalLangParserVisitor):
     def visitFunctionDeclaration(self, ctx):
         name = ctx.IDENTIFIER().getText()
         param_list = []
+        seen_params = set()  # Track seen parameter names
 
         if ctx.parameter():
             for typed_param in ctx.parameter().typedParameter():
                 param_name = typed_param.IDENTIFIER().getText()
+                
+                # Check for duplicate parameter names
+                if param_name in seen_params:
+                    line = typed_param.start.line
+                    column = typed_param.start.column
+                    code_line = self.get_source_line(typed_param)
+                    raise InterpreterError(
+                        message=f"Duplicate parameter name '{param_name}' in function declaration",
+                        line=line,
+                        column=column,
+                        code_line=code_line,
+                        suggestion="Parameter names must be unique within a function declaration"
+                    )
+                
+                seen_params.add(param_name)
                 param_list.append(param_name)
 
         body = ctx.blockStatement()
         self.functions[name] = {
             "params": param_list,
             "body": body,
-            "scope": self.current_scope  # Store the current scope as parent
+            "scope": self.current_scope
         }
 
         return None
