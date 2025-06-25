@@ -1,27 +1,9 @@
 Start Program
 
-    Define Function foo1(a int) {
-        Display "foo1:", a
-        If (a > 0) {
-            foo2(a - 1)
+    For (Set i to 0 int; i < 10; i to i + 1) {
+        For (Set j to 0 int; j < i; j to j + 1) {
+            Display i, j
         }
-        Return 0
     }
-    End Function
-
-    Define Function foo2(a int) {
-        Display "foo2:", a
-        If (a > 0) {
-            foo1(a - 2)
-        }
-        Return 1
-    }
-    End Function
-
-    Define Function foo1(a int) {
-        Return 10 
-    } End Function
-
-    foo1(10)
 
 End Program
