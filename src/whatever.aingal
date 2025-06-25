@@ -1,10 +1,12 @@
 Start Program
 
-    For (Set i to 0 int; i < 10; Set i to i + 1) {
-        If (i % 2 == 0) {
-            Display i
-            Display i
-        }
-    }
+    Set i to 1 int
+    Set f to 1 float
+    Set i2 to (int)1.5
+    Set i3 to (int)true
+    Set i4 to (int)"1"
+    Set b to (bool)1.0
+
+    Display i, f, i2, i3, i4, b
 
 End Program

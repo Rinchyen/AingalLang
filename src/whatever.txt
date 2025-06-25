@@ -1,17 +1,1 @@
-foo2: 10.0
-foo1: 8.0
-foo2: 7.0
-foo1: 5.0
-foo2: 4.0
-foo1: 2.0
-foo2: 1.0
-foo1: -1.0
-Result: 0.0
-Result: 1.0
-Result: 0.0
-Result: 1.0
-Result: 0.0
-Result: 1.0
-Result: 0.0
-Result: 1.0
-1.0
+1 1.0 1.5 1 1 True

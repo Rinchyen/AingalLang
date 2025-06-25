@@ -37,7 +37,7 @@ class InterpreterError(Exception):
 class Scope:
     def __init__(self, parent=None):
         self.variables = {}
-        self.parameters = set()  # Track parameters separately
+        self.parameters = set()
         self.parent = parent
 
     def set_variable(self, name, value, is_param=False):
@@ -87,11 +87,10 @@ class Interpreter(AingalLangParserVisitor):
     def set_var(self, name, value):
         scope = self.global_scope
         while scope:
-            if scope.has_variable(name):  # ✅ use has_variable here
+            if scope.has_variable(name):
                 scope.set_variable(name, value)
                 return
             scope = scope.parent
-        # If not found, define in current scope
         self.global_scope.set_variable(name, value)
 
     def get_var(self, name):
@@ -116,7 +115,6 @@ class Interpreter(AingalLangParserVisitor):
 
     def visitVariableDeclaration(self, ctx):
         if ctx.scopedIdentifier():
-            # Handle scoped identifiers as before
             scoped_name = ctx.scopedIdentifier().getText()
             value = self.visit(ctx.expression())
             type_ctx = ctx.typeAnnotation()
@@ -131,12 +129,10 @@ class Interpreter(AingalLangParserVisitor):
             value = self.visit(ctx.expression())
             type_ctx = ctx.typeAnnotation()
             declared_type = type_ctx.getText().lower() if type_ctx else None
-            
-            # Check if we're in a for-loop initialization context
+
             in_for_init = (ctx.parentCtx and 
                         isinstance(ctx.parentCtx, AingalLangParser.ForInitContext))
-            
-            # Skip checks for for-loop initialization variables
+
             if not in_for_init:
                 if self.current_scope.is_parameter(name):
                     line = ctx.start.line
@@ -178,7 +174,6 @@ class Interpreter(AingalLangParserVisitor):
             raise Exception(f"Unknown type: {type_str}")
 
     def resolve_scope_for_assignment(self, scoped_name):
-        # scoped_name might be e.g. "parent::parent::x"
         parts = scoped_name.split("::")
         var_name = parts[-1]
         levels = len(parts) - 1
@@ -196,8 +191,7 @@ class Interpreter(AingalLangParserVisitor):
 
     def visitFunctionDeclaration(self, ctx):
         name = ctx.IDENTIFIER().getText()
-        
-        # Check for duplicate function declaration
+
         if name in self.functions:
             line = ctx.start.line
             column = ctx.start.column
@@ -242,7 +236,6 @@ class Interpreter(AingalLangParserVisitor):
         return None
 
     def visitFunctionCall(self, ctx):
-        # print("New visitFunctionCall reached")
 
         func_name = ctx.IDENTIFIER().getText()
         args = []
@@ -252,7 +245,6 @@ class Interpreter(AingalLangParserVisitor):
                 arg_val = self.visit(expr)
                 args.append(arg_val)
 
-        # print(f"Calling function: {func_name} with args: {args}")
         result = self.callFunction(func_name, args)
         return result      
 
@@ -265,10 +257,8 @@ class Interpreter(AingalLangParserVisitor):
         if len(param_names) != len(args):
             raise Exception(f"Function '{name}' expects {len(param_names)} args, got {len(args)}")
 
-        # Create new scope with defining_scope as parent
         local_scope = Scope(parent=defining_scope)
 
-        # Set parameter values and mark them as parameters
         for pname, arg in zip(param_names, args):
             local_scope.set_variable(pname, arg, is_param=True)
 
@@ -331,14 +321,10 @@ class Interpreter(AingalLangParserVisitor):
         name = ctx.IDENTIFIER().getText()
         
         current_scope = self.current_scope
-        
-        # For function scopes, we need to start from the parent scope
-        # For regular blocks, we start from current scope
-        # So we need to check if we're in a function call context
+
         in_function = any(isinstance(frame, dict) and 'params' in frame 
                         for frame in self.call_stack)
-        
-        # If we're in a function and asking for parent, we need to go up one more level
+
         if in_function and levels > 0:
             if current_scope.parent is None:
                 line = ctx.start.line
@@ -352,8 +338,7 @@ class Interpreter(AingalLangParserVisitor):
                     suggestion="Try using fewer 'parent::' levels - you exceeded the available scope depth"
                 )
             current_scope = current_scope.parent
-        
-        # Now handle all requested parent levels
+
         for _ in range(levels):
             if current_scope.parent is None:
                 line = ctx.start.line
@@ -397,8 +382,7 @@ class Interpreter(AingalLangParserVisitor):
     def visitReassignment(self, ctx):
         name = ctx.leftHandSide().getText()
         value = self.visit(ctx.expression())
-        
-        # Find the variable in the scope chain
+
         scope = self.current_scope
         while scope:
             if scope.has_variable(name):
@@ -590,7 +574,7 @@ class Interpreter(AingalLangParserVisitor):
             if isinstance(value, bool):
                 return 1 if value else 0
             try:
-                return int(float(value))  # Handle cases where value is string "1" or float 1.5
+                return int(float(value))
             except ValueError:
                 raise Exception(f"Cannot cast {value} to int")
         elif target_type == 'float':
@@ -728,28 +712,20 @@ class Interpreter(AingalLangParserVisitor):
 
             
     def visitForLoop(self, ctx):
-        # Handle forInit (only if it's a variable declaration)
         if ctx.forInit() and ctx.forInit().variableDeclaration():
             var_decl = ctx.forInit().variableDeclaration()
             name = var_decl.leftHandSide().getText()
             value = self.visit(var_decl.expression())
             
-            # Skip type checking for for-loop variables if needed
             if var_decl.typeAnnotation():
                 value = self.cast_value(value, var_decl.typeAnnotation().getText().lower())
             
-            # Remove any existing variable declaration in current scope
-            if name in self.current_scope.variables:
-                del self.current_scope.variables[name]
-            
-            # Set the variable
             self.current_scope.set_variable(name, value)
 
         while self.visit(ctx.boolExpression()):
-            self.push_env()  # Create new scope for loop body
+            self.push_env()
 
             try:
-                # Execute loop body
                 result = self.visit(ctx.forBody())
                 if isinstance(result, BreakStatement):
                     self.pop_env()
@@ -757,9 +733,22 @@ class Interpreter(AingalLangParserVisitor):
             finally:
                 self.pop_env()
 
-            # Handle forUpdate
             if ctx.forUpdate():
-                self.visit(ctx.forUpdate())
+                if ctx.forUpdate().variableDeclaration():
+                    var_decl = ctx.forUpdate().variableDeclaration()
+                    name = var_decl.leftHandSide().getText()
+                    value = self.visit(var_decl.expression())
+                    
+                    scope = self.current_scope
+                    while scope:
+                        if scope.has_variable(name):
+                            scope.set_variable(name, value)
+                            break
+                        scope = scope.parent
+                    else:
+                        raise Exception(f"Variable '{name}' not defined")
+                else:
+                    self.visit(ctx.forUpdate())
 
     def evaluateBinaryOp(self, left, right, op):
         if op == '+': return left + right
