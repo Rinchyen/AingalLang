@@ -386,6 +386,24 @@ class AingalLangParserListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by AingalLangParser#factorTrue.
+    def enterFactorTrue(self, ctx:AingalLangParser.FactorTrueContext):
+        pass
+
+    # Exit a parse tree produced by AingalLangParser#factorTrue.
+    def exitFactorTrue(self, ctx:AingalLangParser.FactorTrueContext):
+        pass
+
+
+    # Enter a parse tree produced by AingalLangParser#factorFalse.
+    def enterFactorFalse(self, ctx:AingalLangParser.FactorFalseContext):
+        pass
+
+    # Exit a parse tree produced by AingalLangParser#factorFalse.
+    def exitFactorFalse(self, ctx:AingalLangParser.FactorFalseContext):
+        pass
+
+
     # Enter a parse tree produced by AingalLangParser#operation.
     def enterOperation(self, ctx:AingalLangParser.OperationContext):
         pass

@@ -165,6 +165,8 @@ factor
     | operation                                #factorOperation
     | LPAREN numExpression RPAREN              #factorParens
     | LPAREN typeAnnotation RPAREN factor      #castExpression 
+    | TRUE_VALUE                               #factorTrue
+    | FALSE_VALUE                              #factorFalse
     ;
 
 operation : IDENTIFIER (INCREMENT | DECREMENT) SEMICOLON? ;

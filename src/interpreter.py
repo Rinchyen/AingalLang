@@ -116,8 +116,8 @@ class Interpreter(AingalLangParserVisitor):
 
     def visitVariableDeclaration(self, ctx):
         if ctx.scopedIdentifier():
-            # Don't visit scopedIdentifier (returns value), instead parse text
-            scoped_name = ctx.scopedIdentifier().getText()  # e.g. "parent::x"
+            # Handle scoped identifiers as before
+            scoped_name = ctx.scopedIdentifier().getText()
             value = self.visit(ctx.expression())
             type_ctx = ctx.typeAnnotation()
             declared_type = type_ctx.getText().lower() if type_ctx else None
@@ -125,8 +125,6 @@ class Interpreter(AingalLangParserVisitor):
                 value = self.cast_value(value, declared_type)
 
             scope, var_name = self.resolve_scope_for_assignment(scoped_name)
-            if scope.has_variable(var_name):
-                raise Exception(f"Variable '{var_name}' already declared in this scope.")
             scope.set_variable(var_name, value)
         else:
             name = ctx.leftHandSide().getText()
@@ -134,22 +132,27 @@ class Interpreter(AingalLangParserVisitor):
             type_ctx = ctx.typeAnnotation()
             declared_type = type_ctx.getText().lower() if type_ctx else None
             
-            if self.current_scope.is_parameter(name):
-                line = ctx.start.line
-                column = ctx.start.column
-                code_line = self.get_source_line(ctx)
-                raise InterpreterError(
-                    message=f"Cannot redeclare parameter '{name}' in this scope",
-                    line=line,
-                    column=column,
-                    code_line=code_line,
-                    suggestion="Parameters cannot be redeclared in the same function scope"
-                )
+            # Check if we're in a for-loop initialization context
+            in_for_init = (ctx.parentCtx and 
+                        isinstance(ctx.parentCtx, AingalLangParser.ForInitContext))
             
-            # Check if variable already exists in current scope
-            if self.current_scope.has_variable(name):
-                raise Exception(f"Variable '{name}' is already declared in this scope")
+            # Skip checks for for-loop initialization variables
+            if not in_for_init:
+                if self.current_scope.is_parameter(name):
+                    line = ctx.start.line
+                    column = ctx.start.column
+                    code_line = self.get_source_line(ctx)
+                    raise InterpreterError(
+                        message=f"Cannot redeclare parameter '{name}' in this scope",
+                        line=line,
+                        column=column,
+                        code_line=code_line,
+                        suggestion="Parameters cannot be redeclared in the same function scope"
+                    )
                 
+                if self.current_scope.has_variable(name):
+                    raise Exception(f"Variable '{name}' is already declared in this scope")
+                    
             if declared_type:
                 value = self.cast_value(value, declared_type)
             self.current_scope.set_variable(name, value)
@@ -204,7 +207,7 @@ class Interpreter(AingalLangParserVisitor):
                 line=line,
                 column=column,
                 code_line=code_line,
-                suggestion="Function names must be unique within the same scope"
+                suggestion="Function names must be unique"
             )
 
         param_list = []
@@ -392,19 +395,26 @@ class Interpreter(AingalLangParserVisitor):
         return result
 
     def visitReassignment(self, ctx):
-        name = ctx.IDENTIFIER().getText()
-        if name not in self.variables:
-            raise Exception(f"Variable '{name}' not defined.")
-        value = self.visit(ctx.numExpression())
-        if ctx.ADD_TO():
-            self.variables[name] += value
-        elif ctx.SUBTRACT_FROM():
-            self.variables[name] -= value
-        elif ctx.TIMES():
-            self.variables[name] *= value
-        elif ctx.DIVIDE_FROM():
-            self.variables[name] /= value
-        return self.variables[name]
+        name = ctx.leftHandSide().getText()
+        value = self.visit(ctx.expression())
+        
+        # Find the variable in the scope chain
+        scope = self.current_scope
+        while scope:
+            if scope.has_variable(name):
+                current_value = scope.get_variable(name)
+                if ctx.ADD_TO():
+                    scope.set_variable(name, current_value + value)
+                elif ctx.SUBTRACT_FROM():
+                    scope.set_variable(name, current_value - value)
+                elif ctx.TIMES():
+                    scope.set_variable(name, current_value * value)
+                elif ctx.DIVIDE_FROM():
+                    scope.set_variable(name, current_value / value)
+                return scope.get_variable(name)
+            scope = scope.parent
+        
+        raise Exception(f"Variable '{name}' not defined.")
 
     def visitDisplayStatement(self, ctx):
         expressions = ctx.expression()
@@ -623,6 +633,12 @@ class Interpreter(AingalLangParserVisitor):
 
     def visitFalseLiteral(self, ctx):
         return False
+    
+    def visitFactorTrue(self, ctx):
+        return True
+
+    def visitFactorFalse(self, ctx):
+        return False
 
     def visitLogicIdentifier(self, ctx):
         name = ctx.IDENTIFIER().getText()
@@ -712,21 +728,38 @@ class Interpreter(AingalLangParserVisitor):
 
             
     def visitForLoop(self, ctx):
-        if ctx.forInit():
-            self.visit(ctx.forInit())
+        # Handle forInit (only if it's a variable declaration)
+        if ctx.forInit() and ctx.forInit().variableDeclaration():
+            var_decl = ctx.forInit().variableDeclaration()
+            name = var_decl.leftHandSide().getText()
+            value = self.visit(var_decl.expression())
+            
+            # Skip type checking for for-loop variables if needed
+            if var_decl.typeAnnotation():
+                value = self.cast_value(value, var_decl.typeAnnotation().getText().lower())
+            
+            # Remove any existing variable declaration in current scope
+            if name in self.current_scope.variables:
+                del self.current_scope.variables[name]
+            
+            # Set the variable
+            self.current_scope.set_variable(name, value)
 
         while self.visit(ctx.boolExpression()):
-            self.push_env()  
+            self.push_env()  # Create new scope for loop body
 
-            result = self.visit(ctx.forBody())
-            if isinstance(result, BreakStatement):
+            try:
+                # Execute loop body
+                result = self.visit(ctx.forBody())
+                if isinstance(result, BreakStatement):
+                    self.pop_env()
+                    return
+            finally:
                 self.pop_env()
-                return
 
-            self.pop_env()
-
-            self.visit(ctx.forUpdate())
-
+            # Handle forUpdate
+            if ctx.forUpdate():
+                self.visit(ctx.forUpdate())
 
     def evaluateBinaryOp(self, left, right, op):
         if op == '+': return left + right

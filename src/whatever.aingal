@@ -1,8 +1,9 @@
 Start Program
 
-    For (Set i to 0 int; i < 10; i to i + 1) {
-        For (Set j to 0 int; j < i; j to j + 1) {
-            Display i, j
+    For (Set i to 0 int; i < 10; Set i to i + 1) {
+        If (i % 2 == 0) {
+            Display i
+            Display i
         }
     }
 

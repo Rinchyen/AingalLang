@@ -219,6 +219,16 @@ class AingalLangParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by AingalLangParser#factorTrue.
+    def visitFactorTrue(self, ctx:AingalLangParser.FactorTrueContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by AingalLangParser#factorFalse.
+    def visitFactorFalse(self, ctx:AingalLangParser.FactorFalseContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by AingalLangParser#operation.
     def visitOperation(self, ctx:AingalLangParser.OperationContext):
         return self.visitChildren(ctx)
