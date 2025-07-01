@@ -29,6 +29,11 @@ class AingalLangParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by AingalLangParser#assignment.
+    def visitAssignment(self, ctx:AingalLangParser.AssignmentContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by AingalLangParser#matrixExpression.
     def visitMatrixExpression(self, ctx:AingalLangParser.MatrixExpressionContext):
         return self.visitChildren(ctx)

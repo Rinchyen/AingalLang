@@ -154,7 +154,6 @@ class Interpreter(AingalLangParserVisitor):
             self.current_scope.set_variable(name, value)
         return None
 
-
     def cast_value(self, value, type_str):
         if type_str == "int":
             return int(float(value))  

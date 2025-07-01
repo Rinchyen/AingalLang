@@ -44,6 +44,15 @@ class AingalLangParserListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by AingalLangParser#assignment.
+    def enterAssignment(self, ctx:AingalLangParser.AssignmentContext):
+        pass
+
+    # Exit a parse tree produced by AingalLangParser#assignment.
+    def exitAssignment(self, ctx:AingalLangParser.AssignmentContext):
+        pass
+
+
     # Enter a parse tree produced by AingalLangParser#matrixExpression.
     def enterMatrixExpression(self, ctx:AingalLangParser.MatrixExpressionContext):
         pass

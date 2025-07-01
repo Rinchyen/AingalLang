@@ -1,12 +1,27 @@
 Start Program
 
-    Set i to 1 int
-    Set f to 1 float
-    Set i2 to (int)1.5
-    Set i3 to (int)true
-    Set i4 to (int)"1"
-    Set b to (bool)1.0
+    Define Function foo1(a int) {
+        Display "foo1:", a
+        If (a > 0) {
+            foo2(a - 1)
+        }
+        Return 0
+    }
+    End Function
 
-    Display i, f, i2, i3, i4, b
+    Define Function foo2(a int) {
+        Display "foo2:", a
+        If (a > 0) {
+            foo1(a - 2)
+        }
+        Return 1
+    }
+    End Function
+
+    Define Function foo4(a int,b int, c int) {
+        Display 10 
+    } End Function
+
+    foo2(10)
 
 End Program

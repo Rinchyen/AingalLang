@@ -8,6 +8,7 @@ program : START_PROGRAM statement+ END_PROGRAM ;
 // Statements
 statement: 
       variableDeclaration
+    | assignment
     | reassignment
     | functionDeclaration
     | functionCall
@@ -23,6 +24,7 @@ statement:
 
 loopStatements:
       loopStatement
+    | assignment
     | variableDeclaration
     | reassignment
     | functionDeclaration
@@ -38,6 +40,11 @@ loopStatements:
 variableDeclaration
     : SET? (scopedIdentifier | leftHandSide) TO expression typeAnnotation?
     ;
+
+assignment
+    : scopedIdentifier TO expression
+    ;
+
 
 matrixExpression: (INVERT_MATRIX)? matrixAtom (TRANSPOSITION)?;
 matrixAtom: IDENTIFIER | matrixConstruction;
