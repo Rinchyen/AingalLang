@@ -24,13 +24,8 @@ class AingalLangParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by AingalLangParser#variableDeclaration.
-    def visitVariableDeclaration(self, ctx:AingalLangParser.VariableDeclarationContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by AingalLangParser#assignment.
-    def visitAssignment(self, ctx:AingalLangParser.AssignmentContext):
+    # Visit a parse tree produced by AingalLangParser#variableDeclarationOrAssignment.
+    def visitVariableDeclarationOrAssignment(self, ctx:AingalLangParser.VariableDeclarationOrAssignmentContext):
         return self.visitChildren(ctx)
 
 

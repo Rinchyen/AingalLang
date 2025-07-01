@@ -42,4 +42,6 @@ class AingalLangErrorListener(ErrorListener):
             return f"Check expression before '{offending_text}' for missing or extra elements."
         if "mismatched input" in msg:
             return f"Unexpected token '{offending_text}'. Did you forget something before it?"
+        if "not declared in this scope" in msg:
+            return "Variables must be declared with 'Set' in the current scope before assignment"
         return "Check the syntax near the highlighted area."

@@ -7,9 +7,7 @@ program : START_PROGRAM statement+ END_PROGRAM ;
 
 // Statements
 statement: 
-      variableDeclaration
-    | assignment
-    | reassignment
+      variableDeclarationOrAssignment
     | functionDeclaration
     | functionCall
     | returnStatement
@@ -24,9 +22,7 @@ statement:
 
 loopStatements:
       loopStatement
-    | assignment
-    | variableDeclaration
-    | reassignment
+    | variableDeclarationOrAssignment
     | functionDeclaration
     | returnStatement
     | ifStatement
@@ -36,13 +32,9 @@ loopStatements:
     ;
 
 
-// Variable Declaration & Assignment
-variableDeclaration
-    : SET? (scopedIdentifier | leftHandSide) TO expression typeAnnotation?
-    ;
-
-assignment
-    : scopedIdentifier TO expression
+variableDeclarationOrAssignment
+    : SET (scopedIdentifier | IDENTIFIER) TO expression typeAnnotation?    // declaration
+    | SET? (scopedIdentifier | IDENTIFIER) TO expression                        // reassignment
     ;
 
 
@@ -115,6 +107,7 @@ builtInFunctions:POWER_FUNC LPAREN numExpression COMMA numExpression RPAREN
 ifStatement: IF LPAREN boolExpression RPAREN (statement | blockStatement)
              (ELSE_IF LPAREN boolExpression RPAREN (statement | blockStatement))*
              (ELSE (statement | blockStatement))?;
+
 loopIfStatement: IF LPAREN boolExpression RPAREN (LBRACE loopStatements+ RBRACE | statement)
 
              (ELSE_IF LPAREN boolExpression RPAREN (LBRACE loopStatements+ RBRACE | statement))*
@@ -131,12 +124,11 @@ forLoop
 
 forInit
     : IDENTIFIER
-    | variableDeclaration
+    | variableDeclarationOrAssignment
     ;
 
 forUpdate
-    : variableDeclaration
-    | reassignment
+    : variableDeclarationOrAssignment
     | operation
     ;
 

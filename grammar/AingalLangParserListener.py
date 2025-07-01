@@ -35,21 +35,12 @@ class AingalLangParserListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by AingalLangParser#variableDeclaration.
-    def enterVariableDeclaration(self, ctx:AingalLangParser.VariableDeclarationContext):
+    # Enter a parse tree produced by AingalLangParser#variableDeclarationOrAssignment.
+    def enterVariableDeclarationOrAssignment(self, ctx:AingalLangParser.VariableDeclarationOrAssignmentContext):
         pass
 
-    # Exit a parse tree produced by AingalLangParser#variableDeclaration.
-    def exitVariableDeclaration(self, ctx:AingalLangParser.VariableDeclarationContext):
-        pass
-
-
-    # Enter a parse tree produced by AingalLangParser#assignment.
-    def enterAssignment(self, ctx:AingalLangParser.AssignmentContext):
-        pass
-
-    # Exit a parse tree produced by AingalLangParser#assignment.
-    def exitAssignment(self, ctx:AingalLangParser.AssignmentContext):
+    # Exit a parse tree produced by AingalLangParser#variableDeclarationOrAssignment.
+    def exitVariableDeclarationOrAssignment(self, ctx:AingalLangParser.VariableDeclarationOrAssignmentContext):
         pass
 
 
