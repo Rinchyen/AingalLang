@@ -422,15 +422,6 @@ class AingalLangParserListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by AingalLangParser#reassignment.
-    def enterReassignment(self, ctx:AingalLangParser.ReassignmentContext):
-        pass
-
-    # Exit a parse tree produced by AingalLangParser#reassignment.
-    def exitReassignment(self, ctx:AingalLangParser.ReassignmentContext):
-        pass
-
-
     # Enter a parse tree produced by AingalLangParser#boolExpression.
     def enterBoolExpression(self, ctx:AingalLangParser.BoolExpressionContext):
         pass

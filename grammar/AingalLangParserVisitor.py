@@ -239,11 +239,6 @@ class AingalLangParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by AingalLangParser#reassignment.
-    def visitReassignment(self, ctx:AingalLangParser.ReassignmentContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by AingalLangParser#boolExpression.
     def visitBoolExpression(self, ctx:AingalLangParser.BoolExpressionContext):
         return self.visitChildren(ctx)

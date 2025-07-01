@@ -1,10 +1,21 @@
 Start Program
 
-    For (Set i to 0 int; i < 10; Set i to i + 1) {
-        For (Set j to 0 int; j < i; Set j to j + 1) {
-            Display i, j
-            i to j
+    Set x to 100 int
+
+    Define Function foo(n int) {
+        Display "n:", n
+
+        x to n
+
+        If (n > 0) {
+            foo(n - 1)
         }
-    }
+
+        Display "x:", x
+        Display "parent::x:", parent::x
+    }End Function
+
+    foo(6)
+
 
 End Program

@@ -34,7 +34,7 @@ loopStatements:
 
 variableDeclarationOrAssignment
     : SET (scopedIdentifier | IDENTIFIER) TO expression typeAnnotation?    // declaration
-    | SET? (scopedIdentifier | IDENTIFIER) TO expression                        // reassignment
+    | (scopedIdentifier | IDENTIFIER) TO expression                        // reassignment
     ;
 
 
@@ -173,10 +173,6 @@ operation : IDENTIFIER (INCREMENT | DECREMENT) SEMICOLON? ;
 leftHandSide
     : IDENTIFIER
     | scopedIdentifier  // Add this line
-    ;
-
-reassignment
-    : (scopedIdentifier | leftHandSide) ((ADD_TO | SUBTRACT_FROM | TIMES | DIVIDE_FROM) expression) SEMICOLON?
     ;
 
 boolExpression

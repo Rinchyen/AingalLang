@@ -119,7 +119,7 @@ class Interpreter(AingalLangParserVisitor):
     def visitVariableDeclarationOrAssignment(self, ctx):
         # Check if this is a declaration (has SET keyword)
         is_declaration = ctx.SET() is not None
-        
+
         # Get the target identifier
         if ctx.scopedIdentifier():
             # Scoped identifier handling remains the same
@@ -127,14 +127,14 @@ class Interpreter(AingalLangParserVisitor):
             value = self.visit(ctx.expression())
             type_ctx = ctx.typeAnnotation()
             declared_type = type_ctx.getText().lower() if type_ctx else None
-            
+
             if declared_type:
                 value = self.cast_value(value, declared_type)
             elif isinstance(value, float) and value.is_integer():
                 value = int(value)
 
             scope, var_name = self.resolve_scope_for_assignment(scoped_name)
-            
+
             if is_declaration and self._variable_exists_in_child_scopes(scope, var_name):
                 line = ctx.start.line
                 column = ctx.start.column
@@ -146,8 +146,9 @@ class Interpreter(AingalLangParserVisitor):
                     code_line=code_line,
                     suggestion="Remove the local declaration first or use a different name"
                 )
-                
+
             scope.set_variable(var_name, value)
+
         else:
             # Regular identifier
             name = ctx.IDENTIFIER().getText()
@@ -192,9 +193,14 @@ class Interpreter(AingalLangParserVisitor):
                 elif isinstance(value, float) and value.is_integer():
                     value = int(value)
                 self.current_scope.set_variable(name, value)
+
             else:
-                # For reassignments, the variable must exist in current scope
-                if not self.current_scope.has_variable(name):
+                # For reassignments, search up the scope chain
+                scope = self.current_scope
+                while scope and not scope.has_variable(name):
+                    scope = scope.parent
+
+                if scope is None:
                     raise InterpreterError(
                         message=f"Variable '{name}' not declared in this scope",
                         line=ctx.start.line,
@@ -202,11 +208,14 @@ class Interpreter(AingalLangParserVisitor):
                         code_line=self.get_source_line(ctx),
                         suggestion="Declare the variable with 'Set' before assigning to it"
                     )
-                
+
                 if declared_type:
                     value = self.cast_value(value, declared_type)
-                self.current_scope.set_variable(name, value)
+
+                scope.set_variable(name, value)
+
         return None
+
     
     def _variable_exists_in_child_scopes(self, scope, name):
         """Check if variable exists in any child scope of the given scope"""
