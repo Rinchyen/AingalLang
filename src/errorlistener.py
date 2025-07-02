@@ -12,13 +12,11 @@ class AingalLangErrorListener(ErrorListener):
 
         offending_text = str(offendingSymbol).strip()
 
-        # Smart patch for bad offending token from ANTLR
         if offending_text.startswith('[@') and 'no viable alternative at input' in msg:
             match = re.search(r"no viable alternative at input '(.*?)'", msg)
             if match:
                 offending_text = match.group(1)
 
-        # Generate pointer
         pointer = " " * column + "^"
         if offending_text and offending_text in code_line:
             column = code_line.find(offending_text)

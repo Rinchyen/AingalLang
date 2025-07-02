@@ -3,7 +3,6 @@ import os
 from antlr4 import *
 from io import StringIO
 
-# Add grammar path
 grammar_path = os.path.join(os.path.dirname(__file__), '..', 'grammar')
 sys.path.append(grammar_path)
 
@@ -15,7 +14,6 @@ from interpreter import Interpreter, InterpreterError
 def main():
     debug_mode = False
     
-    # Look for .aingal files in the same directory
     input_dir = os.path.dirname(__file__)
     aingal_files = [f for f in os.listdir(input_dir) if f.endswith('.aingal')]
     
@@ -50,7 +48,6 @@ def main():
         print(e)
         return
     except InterpreterError as e:
-        # Get the line and column from the parse tree if available
         if hasattr(e, 'ctx') and e.ctx is not None:
             line = e.ctx.start.line
             column = e.ctx.start.column
@@ -63,7 +60,6 @@ def main():
         print(f"❌ Unexpected error: {str(e)}")
         return
     
-    # Write output to file
     with open(output_path, 'w', encoding='utf-8') as out_file:
         if isinstance(output, list):
             out_file.write("\n".join(str(line) for line in output))

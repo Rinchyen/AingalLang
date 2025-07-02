@@ -117,12 +117,9 @@ class Interpreter(AingalLangParserVisitor):
         return None
 
     def visitVariableDeclarationOrAssignment(self, ctx):
-        # Check if this is a declaration (has SET keyword)
         is_declaration = ctx.SET() is not None
 
-        # Get the target identifier
         if ctx.scopedIdentifier():
-            # Scoped identifier handling remains the same
             scoped_name = ctx.scopedIdentifier().getText()
             value = self.visit(ctx.expression())
             type_ctx = ctx.typeAnnotation()
@@ -158,13 +155,11 @@ class Interpreter(AingalLangParserVisitor):
             scope.set_variable(var_name, value)
 
         else:
-            # Regular identifier
             name = ctx.IDENTIFIER().getText()
             value = self.visit(ctx.expression())
             type_ctx = ctx.typeAnnotation()
             declared_type = type_ctx.getText().lower() if type_ctx else None
 
-            # For declarations, check if variable exists in current scope
             in_for_init = (
                 ctx.parentCtx and isinstance(ctx.parentCtx, AingalLangParser.ForInitContext)
             )
@@ -195,7 +190,6 @@ class Interpreter(AingalLangParserVisitor):
                             suggestion="Use reassignment syntax instead of redeclaration"
                         )
 
-                # For declarations, set the variable in current scope
                 if declared_type:
                     value = self.cast_value(value, declared_type)
                 elif isinstance(value, float) and value.is_integer():
@@ -203,7 +197,6 @@ class Interpreter(AingalLangParserVisitor):
                 self.current_scope.set_variable(name, value)
 
             else:
-                # For reassignments, search up the scope chain
                 scope = self.current_scope
                 while scope and not scope.has_variable(name):
                     scope = scope.parent
@@ -242,13 +235,11 @@ class Interpreter(AingalLangParserVisitor):
 
         scope = self.current_scope
 
-        # Traverse up the required number of parent levels
         for _ in range(levels):
             if scope.parent is None:
                 raise Exception(f"No parent scope exists while resolving assignment to '{scoped_name}'")
             scope = scope.parent
 
-        # ✅ Do NOT restrict writing even if shadowed by a parameter
         return scope, var_name
 
     def lookup_variable(self, name):
@@ -314,7 +305,6 @@ class Interpreter(AingalLangParserVisitor):
             result = self.callFunction(func_name, args)
             return result
         except InterpreterError as e:
-            # Attach the context to the error for better error reporting
             e.ctx = ctx
             raise e      
 
@@ -333,13 +323,11 @@ class Interpreter(AingalLangParserVisitor):
         if len(param_names) != len(args):
             raise Exception(f"Function '{name}' expects {len(param_names)} args, got {len(args)}")
 
-        # Create local scope with the defining scope as parent
         local_scope = Scope(parent=defining_scope)
 
         for pname, arg in zip(param_names, args):
             local_scope.set_variable(pname, arg, is_param=True)
 
-        # Prepare for function call
         previous_scope = self.current_scope
         self.current_scope = local_scope
         self.call_stack.append({
@@ -349,7 +337,6 @@ class Interpreter(AingalLangParserVisitor):
         })
 
         try:
-            # ✅ Tell visitBlockStatement to skip its own scope pushing
             self.skip_next_block_scope = True
             result = self.visit(body)
         except FunctionReturn as fr:
@@ -403,7 +390,6 @@ class Interpreter(AingalLangParserVisitor):
 
         current_scope = self.current_scope
 
-        # Traverse the required levels of parent scopes
         for _ in range(levels):
             if current_scope.parent is None:
                 line = ctx.start.line
@@ -418,16 +404,15 @@ class Interpreter(AingalLangParserVisitor):
                 )
             current_scope = current_scope.parent
 
-        # After reaching correct parent scope, get variable
         return current_scope.get_variable(name)
 
     
     def visitBlockStatement(self, ctx):
         if self.skip_next_block_scope:
-            self.skip_next_block_scope = False  # reset the flag
+            self.skip_next_block_scope = False  
             for stmt in ctx.statement():
                 self.visit(stmt)
-            return  # DO NOT push/pop
+            return  
 
         self.push_env()
         for stmt in ctx.statement():
@@ -464,7 +449,6 @@ class Interpreter(AingalLangParserVisitor):
         elif ctx.operation():
             result = self.visit(ctx.operation())
 
-        # Handle standalone function call results
         if ctx.functionCall() and result is not None:
             self.output_lines.append(f"Result: {result}")
 
@@ -527,7 +511,6 @@ class Interpreter(AingalLangParserVisitor):
             if op == '*':
                 return left * right
             elif op == '/':
-                # Perform integer division if right operand is integer literal
                 if isinstance(right, int) and not isinstance(left, float):
                     return left // right
                 return left / right
