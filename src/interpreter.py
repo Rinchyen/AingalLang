@@ -136,6 +136,14 @@ class Interpreter(AingalLangParserVisitor):
             scope, var_name = self.resolve_scope_for_assignment(scoped_name)
 
             if is_declaration and self._variable_exists_in_child_scopes(scope, var_name):
+                if target_scope.has_variable(var_name):
+                    token = ctx.IDENTIFIER().getSymbol() if ctx.IDENTIFIER() else ctx.scopedIdentifier().getSymbol()
+                    raise InterpreterError(
+                        f"Variable '{var_name}' already exists in this scope",
+                        line= token.line,
+                        column= token.column
+                    )
+                token = ctx.IDENTIFIER().getSymbol() if ctx.IDENTIFIER() else ctx.scopedIdentifier().getSymbol()
                 line = ctx.start.line
                 column = ctx.start.column
                 code_line = self.get_source_line(ctx)
@@ -302,10 +310,21 @@ class Interpreter(AingalLangParserVisitor):
                 arg_val = self.visit(expr)
                 args.append(arg_val)
 
-        result = self.callFunction(func_name, args)
-        return result      
+        try:
+            result = self.callFunction(func_name, args)
+            return result
+        except InterpreterError as e:
+            # Attach the context to the error for better error reporting
+            e.ctx = ctx
+            raise e      
 
     def callFunction(self, name, args):
+        if name not in self.functions:
+            raise InterpreterError(
+                message=f"Function '{name}' is not defined",
+                suggestion="Check for typos or make sure the function is declared before calling it"
+            )
+            
         func = self.functions[name]
         param_names = func["params"]
         body = func["body"]

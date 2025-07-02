@@ -50,6 +50,13 @@ def main():
         print(e)
         return
     except InterpreterError as e:
+        # Get the line and column from the parse tree if available
+        if hasattr(e, 'ctx') and e.ctx is not None:
+            line = e.ctx.start.line
+            column = e.ctx.start.column
+            e.line = line
+            e.column = column
+            e.code_line = code.split('\n')[line-1] if line <= len(code.split('\n')) else None
         print(e)
         return
     except Exception as e:

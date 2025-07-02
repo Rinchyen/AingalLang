@@ -1,21 +1,6 @@
 Start Program
 
-    Set x to 100 int
-
-    Define Function foo(n int) {
-        Display "n:", n
-
-        x to n
-
-        If (n > 0) {
-            foo(n - 1)
-        }
-
-        Display "x:", x
-        Display "parent::x:", parent::x
-    }End Function
-
-    foo(6)
-
+    Set m to [1,2;3,4] matrix
+    Display m
 
 End Program
